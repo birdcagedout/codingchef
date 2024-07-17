@@ -1,7 +1,19 @@
 import 'package:chat1/screen/main_screen.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+void main() async {
+  // flutter core engine initialize
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // firebase plugin initialize
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     MyApp(),
   );

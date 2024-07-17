@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "731617024637",
+    "project_id": "test-chat-f87b3",
+    "storage_bucket": "test-chat-f87b3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731617024637:android:0a7d42ee45d42d5e74ef14",
+        "android_client_info": {
+          "package_name": "com.birdcagedout.chat1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBv4u_olj2l3dVKFSu73bI8kYVVLk72c2E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
