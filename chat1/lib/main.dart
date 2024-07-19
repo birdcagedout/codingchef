@@ -1,4 +1,5 @@
-import 'package:chat1/screen/main_screen.dart';
+import 'package:chat1/screen/chat_screen.dart';
+import 'package:chat1/screen/login_signup_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -30,7 +31,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginSignupScreen(),
+
+      // home: LoginSignupScreen(),
+      home: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if(snapshot.hasData) {
+            return ChatScreen();
+          }
+          return LoginSignupScreen();
+        },
+      ),
     );
   }
 }

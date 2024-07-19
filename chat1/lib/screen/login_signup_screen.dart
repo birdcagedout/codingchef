@@ -2,7 +2,9 @@ import 'package:chat1/config/palette.dart';
 import 'package:chat1/screen/chat_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';    // submit 버튼 후 spinner
+import 'package:cloud_firestore/cloud_firestore.dart';                  // 인증시 extra data 전송 관련 처리 (firebase_auth 아님)
 
 class LoginSignupScreen extends StatefulWidget {
   const LoginSignupScreen({super.key});
@@ -44,15 +46,17 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Palette.backgroundColor,
-      body: ModalProgressHUD(
-        inAsyncCall: showSpinner,
-        child: GestureDetector(
-          onTap: () {
-            // FocusScope.of(context).unfocus();
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
+    // 원래 포커스를 받는 위젯이 아닌 것을 터치하면 포커스를 죽여서 키보드를 없애는 방법
+    // => "최상단 위젯"을 GestureDetector로 갑싸서 onTap에 한줄 넣는다
+    return GestureDetector(
+      onTap: () {
+        // FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: Palette.backgroundColor,
+        body: ModalProgressHUD(
+          inAsyncCall: showSpinner,
           child: Stack(
             children: [
               // 1. 빨간색 배경 그림
@@ -456,6 +460,17 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                           try {
                             final newUser = await _auth.createUserWithEmailAndPassword(email: userEmail, password: userPassword);
 
+                            // 회원가입 시 extra data 전송
+                            // firestore db는 항상 collection-doc-필드데이터 구조
+                            // collection('user')은 미리 생성할 필요없고, 필드데이터는 항상 Map형태임에 유의
+                            await FirebaseFirestore.instance.collection('user').doc(newUser.user!.uid).set(
+                              {
+                                'userName'  : userName,
+                                'userEmail' : userEmail,
+                              },
+                            );
+
+
                             if (newUser.user != null) {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -486,13 +501,13 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                             final newUser = await _auth.signInWithEmailAndPassword(email: userEmail, password: userPassword);
 
                             if(newUser.user != null) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return ChatScreen();
-                                  },
-                                ),
-                              );
+                              // Navigator.of(context).push(
+                              //   MaterialPageRoute(
+                              //     builder: (context) {
+                              //       return ChatScreen();
+                              //     },
+                              //   ),
+                              // );
 
                               // 이상 없이 로그인이 끝난 경우
                               setState(() {
