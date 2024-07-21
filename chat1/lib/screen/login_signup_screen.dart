@@ -1,5 +1,6 @@
 import 'package:chat1/config/palette.dart';
 import 'package:chat1/screen/chat_screen.dart';
+import 'package:chat1/util/add_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -43,6 +44,19 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
       });
     }
   }
+
+  void showPictureUploadDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          child: AddImage(),
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -159,19 +173,36 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                               },
                               child: Column(
                                 children: [
-                                  Text(
-                                    "SIGNUP",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSignupScreen ? Palette.activeColor : Palette.textColor1,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "SIGNUP",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSignupScreen ? Palette.activeColor : Palette.textColor1,
+                                        ),
+                                      ),
+                                      SizedBox(width: 15,),
+                                      GestureDetector(
+                                        onTap: () {
+                                          showPictureUploadDialog(context);
+                                        },
+                                        child: Icon(
+                                          Icons.image,
+                                          color: isSignupScreen
+                                              ? Colors.cyan
+                                              : Colors.grey[300],
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  // 밑줄
                                   if (isSignupScreen)
                                     Container(
                                       width: 55,
                                       height: 2,
-                                      margin: EdgeInsets.only(top: 3),
+                                      margin: EdgeInsets.fromLTRB(0, 3, 35, 0),
                                       color: Colors.orange,
                                     ),
                                 ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class NewMessage extends StatefulWidget {
@@ -14,13 +15,19 @@ class _NewMessageState extends State<NewMessage> {
   var _userEnterMessage  = "";
   final _controller = TextEditingController();
 
-  void _sendNewMessage() {
+  // 전송 버튼 눌렀을 때 
+  void _sendNewMessage() async {
     FocusManager.instance.primaryFocus!.unfocus();
+
+    final user = FirebaseAuth.instance.currentUser;
+    final userData = await FirebaseFirestore.instance.collection('user').doc(user!.uid).get();
 
     FirebaseFirestore.instance.collection('chat').add(
       {
+        'userName': userData.data()!['userName'],
         'text': _userEnterMessage,
         'time': Timestamp.now(),    // firestore에서 제공되는 기능
+        'userID': user!.uid,
       },
     );
 
@@ -37,6 +44,7 @@ class _NewMessageState extends State<NewMessage> {
           Expanded(
             child: TextField(
               controller: _controller,
+              maxLines: null,
               decoration: const InputDecoration(
                 labelText: "Send a message...",
               ),

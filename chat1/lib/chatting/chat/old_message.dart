@@ -1,11 +1,15 @@
+import 'package:chat1/chatting/chat/chat_bubble.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Messages extends StatelessWidget {
-  const Messages({super.key});
+  Messages({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('chat')
@@ -33,7 +37,11 @@ class Messages extends StatelessWidget {
           reverse: true,
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
-            return Text(snapshot.data!.docs[index]['text']);
+            return ChatBubbles(
+              userName: snapshot.data!.docs[index]['userName'],
+              message: snapshot.data!.docs[index]['text'],
+              isMe: snapshot.data!.docs[index]['userID'].toString() == user!.uid,
+            );
           },
         );
       },
