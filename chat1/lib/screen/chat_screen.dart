@@ -55,7 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Chat Screen"),
+          title: Text("Chat Screen(${loggedUser!.email})"),
           actions: [
             IconButton(
               onPressed: () {

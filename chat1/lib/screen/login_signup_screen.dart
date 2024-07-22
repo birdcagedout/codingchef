@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chat1/config/palette.dart';
 import 'package:chat1/screen/chat_screen.dart';
 import 'package:chat1/util/add_image.dart';
@@ -6,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';    // submit 버튼 후 spinner
 import 'package:cloud_firestore/cloud_firestore.dart';                  // 인증시 extra data 전송 관련 처리 (firebase_auth 아님)
+import 'package:firebase_storage/firebase_storage.dart';
 
 class LoginSignupScreen extends StatefulWidget {
   const LoginSignupScreen({super.key});
@@ -32,6 +35,9 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
   // submit 버튼 누른 후 spinner 보여주기
   bool showSpinner = false;
 
+  // 프로파일용 이미지(카메라 사용)
+  File? userImageFile;
+
 
   void _tryValidation() {
     validationError = 0;
@@ -45,13 +51,17 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
     }
   }
 
+  void getPickedImage(File image) {
+    userImageFile = image;
+  }
+
   void showPictureUploadDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          child: AddImage(),
+          child: AddImage(addImageFunc: getPickedImage,),
         );
       },
     );
@@ -183,18 +193,19 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                                           color: isSignupScreen ? Palette.activeColor : Palette.textColor1,
                                         ),
                                       ),
-                                      SizedBox(width: 15,),
-                                      GestureDetector(
-                                        onTap: () {
-                                          showPictureUploadDialog(context);
-                                        },
-                                        child: Icon(
-                                          Icons.image,
-                                          color: isSignupScreen
-                                              ? Colors.cyan
-                                              : Colors.grey[300],
+                                      const SizedBox(width: 15,),
+                                      if(isSignupScreen)
+                                        GestureDetector(
+                                          onTap: () {
+                                            showPictureUploadDialog(context);
+                                          },
+                                          child: Icon(
+                                            Icons.image,
+                                            color: isSignupScreen
+                                                ? Colors.cyan
+                                                : Colors.grey[300],
+                                          ),
                                         ),
-                                      ),
                                     ],
                                   ),
                                   // 밑줄
@@ -383,6 +394,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                                       // _formKey.currentState.save()가 호출되면 각 TextFormField에 남아있는 String값이 value로 넘어오면서 onSave 호출됨
                                       userEmail = value!;
                                     },
+                                    keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       // 입력필드 맨앞 아이콘
                                       prefixIcon: Icon(
@@ -411,6 +423,7 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
 
                                   // 사용자 비밀번호
                                   TextFormField(
+                                    obscureText: true,
                                     key: ValueKey(5),
                                     // Returns an error string to display if the input is invalid, or null otherwise
                                     validator: (String? value) {
@@ -486,21 +499,48 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
 
                         // 회원가입
                         if(isSignupScreen) {
+
+                          // 이미지 파일이 있어야만 회원가입 가능
+                          if(userImageFile == null) {
+                            setState(() {
+                              showSpinner = false;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("[ERROR] Pick your profile image", style: TextStyle(color: Colors.black),),
+                                backgroundColor: Colors.amber,
+                              ),
+                            );
+                            return;
+                          }
+
                           _tryValidation();
 
                           try {
                             final newUser = await _auth.createUserWithEmailAndPassword(email: userEmail, password: userPassword);
 
+                            // 이미지 경로 설정
+                            final refImage = FirebaseStorage.instance
+                                .ref()
+                                .child('picked_image')
+                                .child("${newUser.user!.uid}.png");
+
+                            // 이미지 업로드
+                            await refImage.putFile(userImageFile!);
+
+                            // 업로드한 이미지의 URL 저장
+                            final imageURL = refImage.getDownloadURL();
+
                             // 회원가입 시 extra data 전송
                             // firestore db는 항상 collection-doc-필드데이터 구조
-                            // collection('user')은 미리 생성할 필요없고, 필드데이터는 항상 Map형태임에 유의
+                            // collection('user')은 미리 생성할 필요없고, 필드데이터는 항상 Map 형태임에 유의
                             await FirebaseFirestore.instance.collection('user').doc(newUser.user!.uid).set(
                               {
                                 'userName'  : userName,
                                 'userEmail' : userEmail,
+                                'picked_image' : imageURL,
                               },
                             );
-
 
                             if (newUser.user != null) {
                               Navigator.of(context).push(
@@ -518,9 +558,31 @@ class _LoginSignupScreenState extends State<LoginSignupScreen> {
                             }
                           } catch(e) {
                             print(e);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("[ERROR] Check your email and password", style: TextStyle(color: Colors.black),), backgroundColor: Colors.amber,),
-                            );
+
+                            /* 아래와 같이 if(mounted) {} 사용하지 않으면 에러 발생
+                              [ERROR:flutter/runtime/dart_vm_initializer.cc(41)] Unhandled Exception: Looking up a deactivated widget's ancestor is unsafe.
+                              At this point the state of the widget's element tree is no longer stable.
+                              To safely refer to a widget's ancestor in its dispose() method, save a reference to the ancestor by calling dependOnInheritedWidgetOfExactType() in the widget's didChangeDependencies() method.
+                              #0      Element._debugCheckStateIsActiveForAncestorLookup.<anonymous closure> (package:flutter/src/widgets/framework.dart:4743:9)
+                              #1      Element._debugCheckStateIsActiveForAncestorLookup (package:flutter/src/widgets/framework.dart:4757:6)
+                              #2      Element.findAncestorWidgetOfExactType (package:flutter/src/widgets/framework.dart:4818:12)
+                              #3      debugCheckHasScaffoldMessenger.<anonymous closure> (package:flutter/src/material/debug.dart:175:17)
+                              #4      debugCheckHasScaffoldMessenger (package:flutter/src/material/debug.dart:187:4)
+                              #5      ScaffoldMessenger.of (package:flutter/src/material/scaffold.dart:146:12)
+                              #6      _LoginSignupScreenState.build.<anonymous closure> (package:chat1/screen/login_signup_screen.dart:549:49)
+                              <asynchronous suspension>
+                            */
+
+                            if(mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("[ERROR] Check your email and password", style: TextStyle(color: Colors.black),),
+                                  backgroundColor: Colors.amber,),
+                              );
+                              setState(() {
+                                showSpinner = false;
+                              });
+                            }
                           }
                         }
 

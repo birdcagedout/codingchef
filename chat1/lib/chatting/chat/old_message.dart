@@ -26,7 +26,7 @@ class Messages extends StatelessWidget {
         }
 
         // 연결되었는데도 data가 없을 때
-        if(snapshot.data == null) {
+        if(!snapshot.hasData) {
           return Container();
         }
 

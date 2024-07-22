@@ -19,8 +19,8 @@ class _NewMessageState extends State<NewMessage> {
   void _sendNewMessage() async {
     FocusManager.instance.primaryFocus!.unfocus();
 
-    final user = FirebaseAuth.instance.currentUser;
-    final userData = await FirebaseFirestore.instance.collection('user').doc(user!.uid).get();
+    final user = FirebaseAuth.instance.currentUser;   // user.uid 얻기
+    final userData = await FirebaseFirestore.instance.collection('user').doc(user!.uid).get();    // userName 얻기
 
     FirebaseFirestore.instance.collection('chat').add(
       {
@@ -32,6 +32,15 @@ class _NewMessageState extends State<NewMessage> {
     );
 
     _controller.clear();
+    setState(() {
+      _userEnterMessage = "";
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,7 +59,7 @@ class _NewMessageState extends State<NewMessage> {
               ),
               onChanged: (value) {
                 setState(() {
-                  _userEnterMessage = value;
+                  _userEnterMessage = value ?? "";
                 });
               },
             ),
