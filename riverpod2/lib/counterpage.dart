@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod2/providers/counter_notifierprovider.dart';
-import 'providers/counter_stateprovider.dart';
 
 
 // Consumer 위젯(ConsumerStatefulWidget, ConsumerState, ConsumerState 수정 필요)
