@@ -1,0 +1,2 @@
+/Users/leibniz/Dev/codingchef/riverpod1/android/app/.cxx/Debug/24155u4m/x86/CMakeFiles/edit_cache.dir
+/Users/leibniz/Dev/codingchef/riverpod1/android/app/.cxx/Debug/24155u4m/x86/CMakeFiles/rebuild_cache.dir
