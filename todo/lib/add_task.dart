@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AddTask extends StatefulWidget {
-  const AddTask({super.key});
+  AddTask({super.key, required this.addTodo});
+
+  final void Function({required String todoText}) addTodo;
 
   @override
   State<AddTask> createState() => _AddTaskState();
@@ -21,6 +23,7 @@ class _AddTaskState extends State<AddTask> {
           TextField(
             controller: todoTextController,
             keyboardType: TextInputType.text,
+            autofocus: true,
             decoration: InputDecoration(
               labelText: '할 일을 입력하세요',
               border: OutlineInputBorder(
@@ -30,7 +33,8 @@ class _AddTaskState extends State<AddTask> {
           ),
           ElevatedButton(
             onPressed: () {
-              print(todoTextController.text);
+              // print('[${todoTextController.text}]');     // textfield에 입력이 없는 경우 ''문자가 들어온다(null 아님)
+              widget.addTodo(todoText: todoTextController.text);
               todoTextController.clear();
             },
             child: Text('Add'),
