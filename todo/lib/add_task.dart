@@ -24,6 +24,10 @@ class _AddTaskState extends State<AddTask> {
             controller: todoTextController,
             keyboardType: TextInputType.text,
             autofocus: true,
+            onSubmitted: (todoText) {   // textfield에서 Enter가 입력되면 바로 동작 + 키보드와 bottomsheet 제거
+              widget.addTodo(todoText: todoTextController.text);
+              todoTextController.clear();
+            },
             decoration: InputDecoration(
               labelText: '할 일을 입력하세요',
               border: OutlineInputBorder(
